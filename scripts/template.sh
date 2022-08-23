@@ -83,11 +83,16 @@ mkdir build
 # Use sed to replace the variables
 # in the CMakeLists.template.txt file
 # and write the result to CMakelists.txt
-sed -e "s/<ProjectName>/$ProjectName/g" \
+sed -i \
+    -e "s/<ProjectName>/$ProjectName/g" \
     -e "s/<FileConfigure>/$FileConfigure/g" \
     # <PN> is the project name but in all uppercase
     -e "s/<PN>/$(echo $ProjectName | tr '[:lower:]' '[:upper:]')/g" \
-    CMakeLists.template.txt > CMakeLists.txt
+    CMakeLists.template.txt
+
+mv CMakeLists.template.txt CMakeLists.txt
+
+echo "Configuring project..."
 
 # Configure using cmake
 cd build
