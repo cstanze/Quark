@@ -107,10 +107,6 @@ esac
 
 echo "Creating project..."
 
-# Remove the git extras
-rm -rf include/.keep
-rm -rf src/.keep
-
 # Should we reinitialize the git repository?
 
 # rm -rf .git
