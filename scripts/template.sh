@@ -109,13 +109,14 @@ esac
 
 echo "Creating project..."
 
-# Remove the git garbage
-
+# Remove the git extras
 rm -rf include/.keep
 rm -rf src/.keep
-rm -rf .git
 
-git init
+# Should we reinitialize the git repository?
+
+# rm -rf .git
+# git init
 
 # Create the build dir
 

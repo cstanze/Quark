@@ -45,3 +45,16 @@ _deps
 *.out
 *.app
 
+# ---> macOS
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ---> Windows
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# ---> VsCode
+.vscode

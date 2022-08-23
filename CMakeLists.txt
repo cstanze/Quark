@@ -53,7 +53,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Build type
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_EBUILD_TYPE "Debug" CACHE STRING
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
     "Build type for <ProjectName> [Debug, RelWithDebInfo, Release]"
     FORCE)
   message(STATUS "Build type not specified, defaulting to ${CMAKE_BUILD_TYPE}")
