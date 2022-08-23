@@ -173,7 +173,7 @@ $targetType = if ($targetType -eq 1) { if ($libraryType -eq 0) { "STATIC" } else
 Template-File "lib/CMakeLists.txt" @{"<TargetName>"=$targetName; "<ProjectName>"=$projectName; "<TargetType>"=$targetType} "lib/CMakeLists.txt"
 
 # rename lib/Quark.cpp to lib/<ProjectName>.cpp
-Rename-Item -Path "lib/Quark.cpp" -NewName "lib/$projectName.cpp"
+Rename-Item -Path "lib/Quark.cpp" -NewName "$projectName.cpp"
 
 echo "Configuring project..."
 
