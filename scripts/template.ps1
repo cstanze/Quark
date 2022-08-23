@@ -163,7 +163,9 @@ $template = Get-Content $templateFile
 
 $template = $template.Replace("<TargetName>", $targetName)
 $template = $template.Replace("<ProjectName>", $projectName)
-$template = $template.Replace("<TargetType>", if ($targetType -eq 1) { if ($libraryType -eq 0) { "STATIC" } else { "SHARED" } } else { "BINARY" })
+
+$targetType = if ($targetType -eq 0) { "BINARY" } else { if ($libraryType -eq 0) { "STATIC" } else { "SHARED" } }
+$template = $template.Replace("<TargetType>", $targetType)
 
 $template | Out-File $templateFile
 
