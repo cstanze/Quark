@@ -61,30 +61,28 @@ fi
 
 # Get the basic project details
 
-ProjectName=$(whiptail --title "Quark Generator" --inputbox "Enter the project name" 8 78 3>&1 1>&2 2>&3)
+ProjectName=$(whiptail --title "Quark Setup" --inputbox "Enter the project name" 8 78 3>&1 1>&2 2>&3)
 propagate_cancel
 
-ProjectType=$(whiptail --menu "Select the target type" 15 78 4 \
+ProjectType=$(whiptail --title "Quark Setup" --menu "Select the target type" 15 78 2 \
   "1" "Executable" \
-  "2" "Library" \
-  --title "Project Type" 3>&1 1>&2 2>&3)
+  "2" "Library" 3>&1 1>&2 2>&3)
 propagate_cancel
 
 case $ProjectType in
   2)
-    LibraryType=$(whiptail --menu "Select the library type" 15 78 4 \
+    LibraryType=$(whiptail --title "Quark Setup" --menu "Select the library type" 15 78 4 \
       "1" "Static" \
-      "2" "Shared" \
-      --title "Library Type" 3>&1 1>&2 2>&3)
+      "2" "Shared" 3>&1 1>&2 2>&3)
     propagate_cancel
     ;;
 esac
 
 
-TargetName=$(whiptail --title "Quark Generator" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
+TargetName=$(whiptail --title "Quark Setup" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
 propagate_cancel
 
-CxxStandardSelection=$(whiptail --menu "Select the C++ standard" 15 78 4 \
+CxxStandardSelection=$(whiptail --title "Quark Setup" --menu "Select the C++ standard" 15 78 4 \
   "1" "C++11" \
   "2" "C++14" \
   "3" "C++17" \
