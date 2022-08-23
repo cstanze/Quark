@@ -131,7 +131,11 @@ if(GIT_REPO)
   )
 endif()
 
-<FileConfigure>
+configure_file(
+  ${CMAKE_SOURCE_DIR}/include/Config.hpp.in
+  ${CMAKE_BINARY_DIR}/include/Config.hpp
+  @ONLY
+)
 
 # Pthread
 set(CMAKE_THREAD_PREFER_PTHREAD ON)

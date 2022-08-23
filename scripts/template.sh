@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function command_exists() {
   type "$1" &> /dev/null ;
+}
+
+function escape_for_sed() {
+  echo "$1" | sed -e 's/[\/&]/\\&/g'
 }
 
 echo "Setting up the project..."
@@ -36,61 +40,73 @@ echo "ok"
 echo "Project name: "
 read ProjectName
 
-touch "src/$ProjectName.cpp"
+echo "Should we generate a library or binary? [lib/bin] "
+read ProjectType
 
+if [ "$ProjectType" != "lib" ] && [ "$ProjectType" != "bin" ] ; then
+  echo "Invalid project type. Please try again."
+  exit 1
+fi
+
+if [ "$ProjectType" == "lib" ] ; then
+  echo "Library type [static/shared]: "
+  read LibraryType
+
+  if [ "$LibraryType" != "static" ] && [ "$LibraryType" != "shared" ] ; then
+    echo "Invalid library type. Please try again."
+    exit 1
+  fi
+fi
+
+# Get name of library/binary
+echo "Name of library/binary: "
+read TargetName
+
+# Everything should be ok, so we can
+# create the project now
+echo "Creating project..."
+
+# Remove the git garbage
 rm -rf include/.keep
 rm -rf src/.keep
 rm -rf .git
 
 git init # Reinitialize git with the new project
 
-# Check if the user wants to
-# set a configure script
-echo "Do you want to set a configure script? (y/n)"
-read ConfigureScript
-
-if [ "$ConfigureScript" = "y" ] ; then
-  echo "Configure in file: "
-  read ConfigureFile
-
-  # if [ ! -f "$ConfigureFile" ] ; then
-  #   printf "\n"
-  #   echo "The configure file does not exist. Please try again."
-  #   exit 1
-  # fi
-
-  touch "$ConfigureFile"
-
-  echo "Configure out file: "
-  read ConfigureOutFile
-
-  if [ -f "$ConfigureOutFile" ] ; then
-    printf "\n"
-    echo "The configure out file already exists. Please try again."
-    exit 1
-  fi
-
-  FileConfigure="configure_file(\"$ConfigureFile\" \"$ConfigureOutFile\" @ONLY)"
-fi
-
-# Everything should be ok, so we can
-# create the project now
-echo "Creating project..."
-
 # Create the build dir
-mkdir build
+mkdir -p build
 
 # Use sed to replace the variables
 # in the CMakeLists.template.txt file
 # and write the result to CMakelists.txt
-sed -i \
-    -e "s/<ProjectName>/$ProjectName/g" \
-    -e "s/<FileConfigure>/$FileConfigure/g" \
-    # <PN> is the project name but in all uppercase
-    -e "s/<PN>/$(echo $ProjectName | tr '[:lower:]' '[:upper:]')/g" \
-    CMakeLists.template.txt
+# <PN> is the project name but in all uppercase
+sed -i -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+    -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+    CMakeLists.txt
 
-mv CMakeLists.template.txt CMakeLists.txt
+sed -i -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+    include/Config.hpp.in
+
+if [ "$ProjectType" == "lib" ] ; then
+  if [ "$LibraryType" == "static" ] ; then
+    sed -i -e "s/<TargetType>/STATIC/g" \
+        -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+        -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+        lib/CMakeLists.txt
+  else
+    sed -i -e "s/<TargetType>/SHARED/g" \
+        -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+        -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+        lib/CMakeLists.txt
+  fi  
+else
+  sed -i -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+      -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+      -e "s/<TargetType>/BINARY/g" \
+      lib/CMakeLists.txt
+fi
+
+mv lib/Quark.cpp lib/$ProjectName.cpp
 
 echo "Configuring project..."
 

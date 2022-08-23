@@ -1,0 +1,9 @@
+#ifndef config_hpp
+#define config_hpp
+
+#define ConfigBuildDate @BUILD_DATE@
+#define ConfigGitRev "@GIT_REVISION@"
+#define ConfigGitBranch "@GIT_BRANCH@"
+#define ConfigVersion "@<PN>_VERSION@"
+
+#endif
