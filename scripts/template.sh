@@ -8,6 +8,13 @@ function escape_for_sed() {
   echo "$1" | sed -e 's/[\/&]/\\&/g'
 }
 
+function propagate_cancel() {
+  if [ $? -ne 0 ]; then
+    echo "Canceling due to previous error"
+    exit $?
+  fi
+}
+
 echo "Setting up the project..."
 
 # Check if basic commands exist
@@ -36,50 +43,66 @@ if ! command_exists git ; then
 fi
 echo "ok"
 
-# Get the project name
-echo "Project name: "
-read ProjectName
-
-echo "Should we generate a library or binary? [lib/bin] "
-read ProjectType
-
-if [ "$ProjectType" != "lib" ] && [ "$ProjectType" != "bin" ] ; then
-  echo "Invalid project type. Please try again."
-  exit 1
-fi
-
-if [ "$ProjectType" == "lib" ] ; then
-  echo "Library type [static/shared]: "
-  read LibraryType
-
-  if [ "$LibraryType" != "static" ] && [ "$LibraryType" != "shared" ] ; then
-    echo "Invalid library type. Please try again."
+printf "Checking for a suitable dialog tui... "
+if ! command_exists whiptail ; then
+  # whiptail is not available, try dialog
+  if ! command_exists dialog ; then
+    printf "\n"
+    echo "Neither whiptail nor dialog are installed. Please install one of them and try again."
     exit 1
   fi
+
+  # dialog is available, should be fine to use it
+  echo "$(which dialog)"
+  alias whiptail=dialog
+else
+  echo "$(which whiptail)"
 fi
 
-# Get name of library/binary
-echo "Name of library/binary: "
-read TargetName
+# Get the basic project details
 
-# Everything should be ok, so we can
-# create the project now
+ProjectName=$(whiptail --title "Quark Generator" --inputbox "Enter the project name" 8 78 3>&1 1>&2 2>&3)
+propagate_cancel
+
+ProjectType=$(whiptail --menu "Select the target type" 15 78 4 \
+  "1" "Executable" \
+  "2" "Library" \
+  --title "Project Type" 3>&1 1>&2 2>&3)
+propagate_cancel
+
+case $ProjectType in
+  2)
+    LibraryType=$(whiptail --menu "Select the library type" 15 78 4 \
+      "1" "Static" \
+      "2" "Shared" \
+      --title "Library Type" 3>&1 1>&2 2>&3)
+    propagate_cancel
+    ;;
+esac
+
+
+TargetName=$(whiptail --title "Quark Generator" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
+propagate_cancel
+
 echo "Creating project..."
 
 # Remove the git garbage
+
 rm -rf include/.keep
 rm -rf src/.keep
 rm -rf .git
 
-git init # Reinitialize git with the new project
+git init
 
 # Create the build dir
+
 mkdir -p build
 
 # Use sed to replace the variables
 # in the CMakeLists.template.txt file
 # and write the result to CMakelists.txt
 # <PN> is the project name but in all uppercase
+
 sed -i -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
     -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
     CMakeLists.txt
@@ -87,8 +110,8 @@ sed -i -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
 sed -i -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
     include/Config.hpp.in
 
-if [ "$ProjectType" == "lib" ] ; then
-  if [ "$LibraryType" == "static" ] ; then
+if [ $ProjectType -eq 2 ] ; then
+  if [ $LibraryType -eq 1 ] ; then
     sed -i -e "s/<TargetType>/STATIC/g" \
         -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
         -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
@@ -117,9 +140,3 @@ cmake -G Ninja ..
 cd ..
 
 echo "Done!"
-
-# Print the next steps
-echo "When you're ready to build, run the following commands:"
-echo ""
-echo "cd build"
-echo "ninja"
