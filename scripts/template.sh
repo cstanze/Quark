@@ -84,6 +84,29 @@ esac
 TargetName=$(whiptail --title "Quark Generator" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
 propagate_cancel
 
+CxxStandardSelection=$(whiptail --menu "Select the C++ standard" 15 78 4 \
+  "1" "C++11" \
+  "2" "C++14" \
+  "3" "C++17" \
+  "4" "C++20" \
+  --title "C++ Standard" 3>&1 1>&2 2>&3)
+propagate_cancel
+
+case $CxxStandardSelection in
+  1)
+    CxxStandard="11"
+    ;;
+  2)
+    CxxStandard="14"
+    ;;
+  3)
+    CxxStandard="17"
+    ;;
+  4)
+    CxxStandard="20"
+    ;;
+esac
+
 echo "Creating project..."
 
 # Remove the git garbage
@@ -105,6 +128,7 @@ mkdir -p build
 
 sed -i -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
     -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+    -e "s/<CxxStandard>/$(escape_for_sed $CxxStandard)/g" \
     CMakeLists.txt
 
 sed -i -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
