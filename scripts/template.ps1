@@ -169,7 +169,8 @@ Template-File "CMakeLists.txt" @{"<PN>"=$projectName.ToUpper(); "<ProjectName>"=
 # <ProjectName> = normal project name
 # <TargetType> = if library, then "STATIC" or "SHARED" else "BINARY"
 
-Template-File "lib/CMakeLists.txt" @{"<TargetName>"=$targetName; "<ProjectName>"=$projectName; "<TargetType>"=($targetType -eq 1 ? ($libraryType -eq 0 ? "STATIC" : "SHARED") : "BINARY")} "lib/CMakeLists.txt"
+$targetType = if ($targetType -eq 1) { if ($libraryType -eq 0) { "STATIC" } else { "SHARED" } } else { "BINARY" }
+Template-File "lib/CMakeLists.txt" @{"<TargetName>"=$targetName; "<ProjectName>"=$projectName; "<TargetType>"=$targetType} "lib/CMakeLists.txt"
 
 # rename lib/Quark.cpp to lib/<ProjectName>.cpp
 Rename-Item -Path "lib/Quark.cpp" -NewName "lib/$projectName.cpp"
