@@ -38,6 +38,12 @@ read ProjectName
 
 touch "src/$ProjectName.cpp"
 
+rm -rf include/.keep
+rm -rf src/.keep
+rm -rf .git
+
+git init # Reinitialize git with the new project
+
 # Check if the user wants to
 # set a configure script
 echo "Do you want to set a configure script? (y/n)"
