@@ -69,6 +69,22 @@ function Select-Option($title, $prompt, $options, $default) {
   return [int]([char]($input) - [int]([char]'a'))
 }
 
+function Template-File($file, $vars, $outFile) {
+  # example:
+  #
+  # Template-File "template.txt" @{"<var1>"="value1"; "<var2>"="value2"}
+  #
+  # should open file template.txt and replace all occurrences of <var1> with value1 and <var2> with value2
+  # then save the result to a new file (optionally the same file) in utf8 encoding
+
+  $content = Get-Content -Raw -Path $file
+  foreach ($var in $vars.Keys) {
+    $content = $content.Replace($var, $vars[$var])
+  }
+
+  Set-Content -Path $outFile -Value $content -Encoding utf8
+}
+
 echo "Setting up the project..."
 
 Printf "Checking for CMake... "
@@ -139,35 +155,21 @@ echo "Creating project..."
 mkdir build -ErrorAction SilentlyContinue
 
 # replace the template file variables with the user input
-$templateFile = "CMakeLists.txt"
-$template = Get-Content $templateFile
 
 # templates:
 # <PN> = project name but capitalized
 # <ProjectName> = normal project name
 # <CxxStandard> = C++ standard
 
-$template = $template.Replace("<PN>", $projectName.ToUpper())
-$template = $template.Replace("<ProjectName>", $projectName)
-$template = $template.Replace("<CxxStandard>", $cxxStandard)
-
-$template | Out-File $templateFile
+Template-File "CMakeLists.txt" @{"<PN>"=$projectName.ToUpper(); "<ProjectName>"=$projectName; "<CxxStandard>"=$cxxStandard} "CMakeLists.txt"
 
 # do the same for the lib/CMakeLists.txt file
 # except use only the following:
 # <TargetName> = target name
 # <ProjectName> = normal project name
 # <TargetType> = if library, then "STATIC" or "SHARED" else "BINARY"
-$templateFile = "lib/CMakeLists.txt"
-$template = Get-Content $templateFile
 
-$template = $template.Replace("<TargetName>", $targetName)
-$template = $template.Replace("<ProjectName>", $projectName)
-
-$targetType = if ($targetType -eq 0) { "BINARY" } else { if ($libraryType -eq 0) { "STATIC" } else { "SHARED" } }
-$template = $template.Replace("<TargetType>", $targetType)
-
-$template | Out-File $templateFile
+Template-File "lib/CMakeLists.txt" @{"<TargetName>"=$targetName; "<ProjectName>"=$projectName; "<TargetType>"=($targetType -eq 1 ? ($libraryType -eq 0 ? "STATIC" : "SHARED") : "BINARY")} "lib/CMakeLists.txt"
 
 # rename lib/Quark.cpp to lib/<ProjectName>.cpp
 Rename-Item -Path "lib/Quark.cpp" -NewName "lib/$projectName.cpp"
