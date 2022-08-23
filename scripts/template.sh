@@ -36,6 +36,8 @@ echo "ok"
 echo "Project name: "
 read ProjectName
 
+touch "src/$ProjectName.cpp"
+
 # Check if the user wants to
 # set a configure script
 echo "Do you want to set a configure script? (y/n)"
@@ -45,11 +47,13 @@ if [ "$ConfigureScript" = "y" ] ; then
   echo "Configure in file: "
   read ConfigureFile
 
-  if [ ! -f "$ConfigureFile" ] ; then
-    printf "\n"
-    echo "The configure file does not exist. Please try again."
-    exit 1
-  fi
+  # if [ ! -f "$ConfigureFile" ] ; then
+  #   printf "\n"
+  #   echo "The configure file does not exist. Please try again."
+  #   exit 1
+  # fi
+
+  touch "$ConfigureFile"
 
   echo "Configure out file: "
   read ConfigureOutFile
