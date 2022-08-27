@@ -10,7 +10,7 @@ function escape_for_sed() {
 
 function propagate_cancel() {
   if [ $? -ne 0 ]; then
-    echo "Canceling due to previous error"
+    echo "Canceling due to previous error: $1"
     exit $?
   fi
 }
@@ -54,41 +54,41 @@ if ! command_exists whiptail ; then
 
   # dialog is available, should be fine to use it
   echo "$(which dialog)"
-  alias whiptail=dialog
+  d=dialog
 else
   echo "$(which whiptail)"
+  d=whiptail
 fi
 
 # Get the basic project details
 
-ProjectName=$(whiptail --title "Quark Setup" --inputbox "Enter the project name" 8 78 3>&1 1>&2 2>&3)
-propagate_cancel
+ProjectName=$($d --title "Quark Setup" --inputbox "Enter the project name" 8 78 3>&1 1>&2 2>&3)
+propagate_cancel $LINENO
 
-ProjectType=$(whiptail --title "Quark Setup" --menu "Select the target type" 15 78 2 \
+ProjectType=$($d --title "Quark Setup" --menu "Select the target type" 15 78 2 \
   "1" "Executable" \
   "2" "Library" 3>&1 1>&2 2>&3)
-propagate_cancel
+propagate_cancel $LINENO
 
 case $ProjectType in
   2)
-    LibraryType=$(whiptail --title "Quark Setup" --menu "Select the library type" 15 78 4 \
+    LibraryType=$($d --title "Quark Setup" --menu "Select the library type" 15 78 4 \
       "1" "Static" \
       "2" "Shared" 3>&1 1>&2 2>&3)
-    propagate_cancel
+    propagate_cancel $LINENO
     ;;
 esac
 
 
-TargetName=$(whiptail --title "Quark Setup" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
-propagate_cancel
+TargetName=$($d --title "Quark Setup" --inputbox "Enter the target name" 8 78 3>&1 1>&2 2>&3)
+propagate_cancel $LINENO
 
-CxxStandardSelection=$(whiptail --title "Quark Setup" --menu "Select the C++ standard" 15 78 4 \
+CxxStandardSelection=$($d --title "Quark Setup" --menu "Select the C++ standard" 15 78 4 \
   "1" "C++11" \
   "2" "C++14" \
   "3" "C++17" \
-  "4" "C++20" \
-  --title "C++ Standard" 3>&1 1>&2 2>&3)
-propagate_cancel
+  "4" "C++20" 3>&1 1>&2 2>&3)
+propagate_cancel $LINENO
 
 case $CxxStandardSelection in
   1)
@@ -120,30 +120,40 @@ mkdir -p build
 # in the CMakeLists.template.txt file
 # and write the result to CMakelists.txt
 # <PN> is the project name but in all uppercase
+# <ProjectName> is the original name input
+# <pn> is the opposite of <PN>
+# <CxxStandard> is the selected C++ standard
+# <TargetType> is either "STATIC", "SHARED", or "BINARY"
+# <TargetName> is the original target name input
 
-sed -i -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+sed -i '' -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
     -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+    -e "s/<pn>/$(escape_for_sed $(echo $ProjectName | tr '[:upper:]' '[:lower:]'))/g" \
     -e "s/<CxxStandard>/$(escape_for_sed $CxxStandard)/g" \
     CMakeLists.txt
 
-sed -i -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+sed -i '' -e "s/<PN>/$(escape_for_sed $(echo $ProjectName | tr '[:lower:]' '[:upper:]'))/g" \
+    -e "s/<pn>/$(escape_for_sed $(echo $ProjectName | tr '[:upper:]' '[:lower:]'))/g" \
     include/Config.hpp.in
 
 if [ $ProjectType -eq 2 ] ; then
   if [ $LibraryType -eq 1 ] ; then
-    sed -i -e "s/<TargetType>/STATIC/g" \
+    sed -i '' -e "s/<TargetType>/STATIC/g" \
         -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+        -e "s/<pn>/$(escape_for_sed $(echo $ProjectName | tr '[:upper:]' '[:lower:]'))/g" \
         -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
         lib/CMakeLists.txt
   else
-    sed -i -e "s/<TargetType>/SHARED/g" \
+    sed -i '' -e "s/<TargetType>/SHARED/g" \
         -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+        -e "s/<pn>/$(escape_for_sed $(echo $ProjectName | tr '[:upper:]' '[:lower:]'))/g" \
         -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
         lib/CMakeLists.txt
   fi  
 else
-  sed -i -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
+  sed -i '' -e "s/<TargetName>/$(escape_for_sed $TargetName)/g" \
       -e "s/<ProjectName>/$(escape_for_sed $ProjectName)/g" \
+      -e "s/<pn>/$(escape_for_sed $(echo $ProjectName | tr '[:upper:]' '[:lower:]'))/g" \
       -e "s/<TargetType>/BINARY/g" \
       lib/CMakeLists.txt
 fi
